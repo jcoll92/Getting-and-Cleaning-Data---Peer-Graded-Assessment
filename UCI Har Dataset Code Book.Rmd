@@ -1,0 +1,95 @@
+---
+title: "UCI Har Dataset Code Book"
+author: "John"
+date: "09/12/2019"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Getting and Cleaning Data - Peer Graded Assessment Code Book
+
+This document is a code book for my submission of the peer graded assessment.
+
+## The Data
+
+The Data was downloaded from: https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip 
+
+Code was then run to check if the data already exists.
+
+## The Variables
+
+The following variables are contained in the analysis.
+
+* Variables
+  + 'features' <- data frame of 561 observations of 2 variables
+  + 'activites' <- data frame of 6 observations of 2 variables
+  + 'subjecttrain' <- data frame of 7,352 observations of 1 variable
+  + 'xtrain' <- data frame of 7,352 observations of 561 variables
+  + 'ytain' <- data frame of 7,352 observations of 1 variable
+  + 'subjecttest' <- data frame of 2,947 observations of 1 variable
+  + 'xtest' <- data frame of 2,947 observations of 561 variables
+  + 'ytest' <- data frame of 2,947 obersavations of 1 varaible
+  + 'Xcombine' <- data frame of 10,299 observations of 561 variables
+  + 'Ycombine' <- data frame of 10,299 observations of 1 variable
+  + 'Subjects' <- data frame of 10,299 observations of 1 variable
+  + 'MergedDataSet' <- data frame of 10,299 observations of 563 variables
+  + 'ExtractedData' <- data frame of 10,299 observations of 88 variables
+  + 'IndependentDataSet' <- data frame of 180 observations of 88 variables
+  
+## The Transformation
+
+The following is a description of the transformation steps conducted. 
+
+#### 1. Merges the training and test sets to create one dataset
+  i. features <- read.table("UCI Har Dataset/features.txt", col.names = c("n", "functions"))
+  ii.  activities <- read.table("UCI Har Dataset/activity_labels.txt", col.names = c("code", "activity"))
+  iii.  subjecttrain <- read.table("UCI Har Dataset/train/subject_train.txt", col.names = "subject")
+  iv.  xtrain <- read.table("UCI Har Dataset/train/X_train.txt", col.names = features$functions)
+  v.  ytrain <- read.table("UCI Har Dataset/train/y_train.txt", col.names = "code")
+  vi.  subjecttest <- read.table("UCI Har Dataset/test/subject_test.txt", col.names = "subject")
+  vii.  xtest <- read.table("UCI Har Dataset/test/X_test.txt", col.names = features$functions)
+  viii.  ytest <- read.table("UCI Har Dataset/test/y_test.txt", col.names = "code")
+ 
+  ix. Xcombine <- rbind(xtrain, xtest)
+  x.  Ycombine <- rbind(ytrain, ytest)
+  xi.  Subjects <- rbind(subjecttrain, subjecttest)
+  xii.  MergedDataSet <- cbind(Subjects, Ycombine, Xcombine)
+
+#### 2. Extraction of mean and standard deviations for each measurement
+  i. ExtractedData <- MergedDataSet %>% select(subject, code, contains("mean"), contains("std"))
+
+#### 3. Now that the data has been extracted, it is time to provide descriptive names to the activities.
+  i. ExtractedData$code <- activities[ExtractedData$code, 2]
+
+#### 4. Now that the activities have descriptive names, it is time to provide the data set with descriptive variable names
+  i. names(ExtractedData) [2] = "activity"
+  ii. names(ExtractedData) <- gsub("Acc", "Accelerometer", names(ExtractedData))
+  iii. names(ExtractedData) <- gsub("angle", "Angle", names(ExtractedData))
+  iv. names(ExtractedData) <- gsub("BodyBody", "Body", names(ExtractedData))
+  v. names(ExtractedData) <- gsub("^f", "Frequency", names(ExtractedData))
+  vi. names(ExtractedData) <- gsub("-freq", "Frequency", names(ExtractedData))
+  vii. names(ExtractedData) <- gsub("gravity", "Gravity", names(ExtractedData))
+  viii. names(ExtractedData) <- gsub("Gyro", "Gyroscope", names(ExtractedData))
+  ix. names(ExtractedData) <- gsub("Mag", "Magnitude", names(ExtractedData))
+  x. names(ExtractedData) <- gsub("-mean", "Mean", names(ExtractedData))
+  xi. names(ExtractedData) <- gsub("-std", "STD", names(ExtractedData))
+  xii. names(ExtractedData) <- gsub("^time", "Time", names(ExtractedData))
+  xiii. names(ExtractedData) <- gsub("tBody", "TimeBody", names(ExtractedData))
+
+#### 5. With the data set we have created during the above steps, we will not create a second, independent data set. This data set will contain the average of each variable for each activity and each subject.
+  i. IndependentDataSet <- ExtractedData %>%
+    group_by(subject, activity) %>%
+    summarise_all(list(mean = mean))
+  write.table(IndependentDataSet, "IndependentDataSet.txt", row.name = TRUE)
+
+#### 6. To read the data into Rstudio use the following
+  i. variablename <- read.table("IndependentDataSet.txt")
+
+
+
+
